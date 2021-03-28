@@ -5,66 +5,84 @@ using System.Linq;
 namespace CardGame {
 	class Program {
 		static void Main(string[] args) {
-			Console.WriteLine("Start Game\n");
+			bool quit = false;
 
-			// generate a new whole deck
-			WholeDeckCards wholeDeckcards = new WholeDeckCards();
-			wholeDeckcards.generateDeck();
+			while (!quit) {
 
-			// shuffle deck
-			wholeDeckcards.shuffleCards();
-			Console.WriteLine("the shuffled deck are showing below: ");
-			wholeDeckcards.printCards();
-			Console.WriteLine("\n");
+				Console.WriteLine("Start Game\n");
 
-			// deal cards to 4 players
-			Console.WriteLine("deal cards to 4 players");
+				// generate a new whole deck
+				WholeDeckCards wholeDeckcards = new WholeDeckCards();
+				wholeDeckcards.generateDeck();
 
-			CardGroup player1Deck = wholeDeckcards.popCards(0, 5);
-			CardGroup player2Deck = wholeDeckcards.popCards(0, 5);
-			CardGroup player3Deck = wholeDeckcards.popCards(0, 5);
-			CardGroup player4Deck = wholeDeckcards.popCards(0, 5);
+				// shuffle deck
+				wholeDeckcards.shuffleCards();
+				Console.WriteLine("the shuffled deck are showing below: ");
+				wholeDeckcards.printCards();
+				Console.WriteLine("\n");
 
-			HandCards player1HandCards = HandCards.CreateInstance(player1Deck);
-			HandCards player2HandCards = HandCards.CreateInstance(player2Deck);
-			HandCards player3HandCards = HandCards.CreateInstance(player3Deck);
-			HandCards player4HandCards = HandCards.CreateInstance(player4Deck);
+				// deal cards to 4 players
+				Console.WriteLine("deal cards to 4 players");
 
-			Console.WriteLine("\n");
+				CardGroup player1Deck = wholeDeckcards.popCards(0, 5);
+				CardGroup player2Deck = wholeDeckcards.popCards(0, 5);
+				CardGroup player3Deck = wholeDeckcards.popCards(0, 5);
+				CardGroup player4Deck = wholeDeckcards.popCards(0, 5);
 
-			if (player1HandCards != null && player2HandCards != null && player3HandCards != null && player4HandCards != null) {
-				List<HandCards> handCardsList = new List<HandCards> {
+				HandCards player1HandCards = HandCards.CreateInstance(player1Deck);
+				HandCards player2HandCards = HandCards.CreateInstance(player2Deck);
+				HandCards player3HandCards = HandCards.CreateInstance(player3Deck);
+				HandCards player4HandCards = HandCards.CreateInstance(player4Deck);
+
+				Console.WriteLine("\n");
+
+				if (player1HandCards != null && player2HandCards != null && player3HandCards != null && player4HandCards != null) {
+					List<HandCards> handCardsList = new List<HandCards> {
 					player1HandCards,
 					player2HandCards,
 					player3HandCards,
 					player4HandCards,
 				};
 
-				int numOfPlayer = 1;
-				foreach (HandCards handCards in handCardsList) {
-					Console.WriteLine($"player{numOfPlayer}'s hand:");
-					handCards.printCards();
-					Console.Write($"player{numOfPlayer}'s hand Categoery: ");
-					Console.WriteLine(handCards.handCategory);
-					Console.WriteLine("-------------------------------------------------------------");
-				}
-
-				// compare category
-				HandCards.HandCategory largesetCategory = getLargestCategory(handCardsList);
-				Console.WriteLine($"the largest category is {largesetCategory}");
-				Console.WriteLine("\n");
-
-				// get player's who have largest category
-				List<HandCards> lCHandCardsList = new List<HandCards>();
-
-				foreach (HandCards handCards in handCardsList) {
-					if (handCards.handCategory == largesetCategory) {
-						lCHandCardsList.Add(handCards);
+					int numOfPlayer = 1;
+					foreach (HandCards handCards in handCardsList) {
+						numOfPlayer += 1;
+						Console.WriteLine($"player{numOfPlayer}'s hand:");
+						handCards.printCards();
+						Console.Write($"player{numOfPlayer}'s hand Categoery: ");
+						Console.WriteLine(handCards.handCategory);
+						Console.WriteLine("-------------------------------------------------------------");
 					}
+
+					// compare category
+					HandCards.HandCategory largesetCategory = getLargestCategory(handCardsList);
+					Console.WriteLine($"the largest category is {largesetCategory}");
+					Console.WriteLine("\n");
+
+					// get player's who have largest category
+					List<HandCards> lCHandCardsList = new List<HandCards>();
+
+					foreach (HandCards handCards in handCardsList) {
+						if (handCards.handCategory == largesetCategory) {
+							lCHandCardsList.Add(handCards);
+						}
+					}
+
+					HandCards winner = compareSameCategory(lCHandCardsList);
+					Console.WriteLine($"Winner has a {winner.handCategory}");
+					Console.WriteLine("Winner's Cards are:");
+					winner.printCards();
+
+					Console.WriteLine("game finished");
+					Console.WriteLine("\n");
+
+					// Wait for the user to respond before closing.
+					Console.Write("Press 'n' and Enter to close the app, or press any other key and Enter to continue: ");
+					if (Console.ReadLine() == "n") quit = true;
+
+					Console.WriteLine("\n"); // Friendly linespacing.
 				}
 			}
-
-
 		}
 
 		static HandCards.HandCategory getLargestCategory(List<HandCards> cardGroupsList) {
@@ -77,46 +95,55 @@ namespace CardGame {
 			return largestCategory;
 		}
 
-
-		static HandCards compareSameCategory(List<HandCards> cardGroupsList, HandCards.HandCategory category) {
-
+		static HandCards compareSameCategory(List<HandCards> cardGroupsList) {
 			HandCards result = cardGroupsList[0];
-			if (cardGroupsList.Count == 1) {
-				return result;
-			}
-
-			if (category == HandCards.HandCategory.flush || category == HandCards.HandCategory.straightFlush || category == HandCards.HandCategory.royalFlush) {
-
-				int largestNumber = 0;
-				foreach (HandCards handCards in cardGroupsList) {
-					if ((int)handCards.getCardIn(0).face > largestNumber) {
-						result = handCards;
-						largestNumber = (int)handCards.getCardIn(0).face;
-					}
+			int maxRank = 0;
+			foreach (HandCards handCards in cardGroupsList) {
+				if (handCards.getRank() > maxRank) {
+					result = handCards;
+					maxRank = handCards.getRank();
 				}
-				return result;
-
 			}
-
-			if (category == HandCards.HandCategory.onePair) {
-
-				foreach (HandCards handCards in cardGroupsList) {
-					int commonNumber = getMostCommonNumber(handCards);
-				}
-				return result;
-
-			}
-
-
 			return result;
-
-
 		}
 
-		static int getMostCommonNumber(HandCards handCards) {
-			return 1;
+
+			/*		static HandCards compareSameCategory(List<HandCards> cardGroupsList, HandCards.HandCategory category) {
+
+						HandCards result = cardGroupsList[0];
+						if (cardGroupsList.Count == 1) {
+							return result;
+						}
+
+						if (category == HandCards.HandCategory.flush || category == HandCards.HandCategory.straightFlush || category == HandCards.HandCategory.royalFlush) {
+
+							int largestNumber = 0;
+							foreach (HandCards handCards in cardGroupsList) {
+								if ((int)handCards.getCardIn(0).face > largestNumber) {
+									result = handCards;
+									largestNumber = (int)handCards.getCardIn(0).face;
+								}
+							}
+							return result;
+
+						}
+
+						if (category == HandCards.HandCategory.onePair) {
+
+							foreach (HandCards handCards in cardGroupsList) {
+								int commonNumber = getMostCommonNumber(handCards);
+							}
+							return result;
+
+						}
+
+
+						return result;
+
+
+					}*/
+
 		}
-	}
 	public class Card {
 		public enum Suit {Spade, Heart, Club, Diamond};
 		public enum Face {Ace=1, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King}
@@ -230,6 +257,7 @@ namespace CardGame {
 
 	public class HandCards : CardGroup {
 		public enum HandCategory { noPair = 0, onePair, twoPair, threeKind, straight, flush, fullhouse, fourKind, straightFlush, royalFlush };
+		private int rank = 0;
 		public HandCategory handCategory;
 
 		private HandCards(CardGroup _cardGroup): base(_cardGroup) {
@@ -244,7 +272,11 @@ namespace CardGame {
 			return null;
 		}
 
-		private int calTotalRank() {
+		public int getRank() {
+			return this.rank;
+		}
+
+		private int calTotalNumber() {
 			int _totalRank = 0;
 			foreach (Card card in cards) {
 				_totalRank += (int)card.face;
@@ -296,7 +328,9 @@ namespace CardGame {
 
 		private bool isRoyalFlush() {
 			if (this.isStraightFlush()) {
-				if (calTotalRank() == 47) {
+				if (calTotalNumber() == 47) {
+					this.rank = 47;
+
 					return true;
 				}
 			}
@@ -305,9 +339,12 @@ namespace CardGame {
 
 		private bool isStraightFlush() {
 			if (this.isStraignt() && this.isFlush()) {
+				this.rank = calTotalNumber();
+
 				return true;
 			}
 			return false;
+
 		}
 
 		private bool isStraignt() {
@@ -318,15 +355,24 @@ namespace CardGame {
 				int _min = (int)cards[3].face;
 
 				if (_min == 10) {
+					this.rank = 47;
 					return true;
 				}
 			}
 
-			return max - min == 4;
+			if (max - min == 4) {
+				this.rank = calTotalNumber();
+				return true;
+			}
+			return false;
 		}
 
-		private bool isFlush () {
+		private bool isFlush() {
 			if (cards[0].suit == cards[1].suit && cards[0].suit == cards[2].suit && cards[0].suit == cards[3].suit && cards[0].suit == cards[4].suit) {
+
+				for (int i = 0; i < 5; i++) {
+					this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
@@ -336,11 +382,17 @@ namespace CardGame {
 		private bool isfourKind() {
 			// case 2,2,2,2,1
 			if (cards[0].face == cards[1].face && cards[0].face == cards[2].face && cards[0].face == cards[3].face) {
+				for (int i = 0; i < 5; i++) {
+					this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
 			// case 2,1,1,1,1
 			if (cards[4].face == cards[1].face && cards[4].face == cards[2].face && cards[4].face == cards[3].face) {
+				for (int i = 0; i < 5; i++) {
+					this.rank += (int)((int)cards[4 - i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
@@ -351,6 +403,9 @@ namespace CardGame {
 			// case 3,3,3,2,2
 			if (cards[0].face == cards[1].face && cards[0].face == cards[2].face) {
 				if (cards[3].face == cards[4].face) {
+					for (int i = 0; i < 5; i++) {
+						this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+					}
 					return true;
 				}
 			}
@@ -358,6 +413,9 @@ namespace CardGame {
 			// case 3,3,2,2,2
 			if (cards[4].face == cards[2].face && cards[4].face == cards[3].face) {
 				if (cards[0].face == cards[1].face) {
+					for (int i = 0; i < 5; i++) {
+						this.rank += (int)((int)cards[4-i].face * Math.Pow(10, 4 - i));
+					}
 					return true;
 				}
 			}
@@ -368,11 +426,17 @@ namespace CardGame {
 		private bool threeKind() {
 			// case 3,3,3,x,y
 			if (cards[0].face == cards[1].face && cards[0].face == cards[2].face) {
+				for (int i = 0; i < 5; i++) {
+					this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
 			// case x,y,2,2,2
 			if (cards[4].face == cards[2].face && cards[4].face == cards[3].face) {
+				for (int i = 0; i < 5; i++) {
+					this.rank += (int)((int)cards[4-i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
@@ -381,16 +445,32 @@ namespace CardGame {
 		private bool twoPair() {
 			// case x,x,y,y,z
 			if (cards[0].face == cards[1].face && cards[2].face == cards[3].face) {
+				for (int i = 0; i < 5; i++) {
+					this.rank += (int)((int)cards[4 - i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
 			// case x,x,y,z,z
 			if (cards[0].face == cards[1].face && cards[3].face == cards[4].face) {
+				for (int i = 0; i < 2; i++) {
+					this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+				}
+
+				this.rank += (int)((int)cards[2].face * Math.Pow(10, 2));
+
+				for (int i = 3; i < 5; i++) {
+					this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
 			// case x,y,y,z,z
 			if (cards[1].face == cards[2].face && cards[3].face == cards[4].face) {
+				for (int i = 1; i < 5; i++) {
+					this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+				}
+				this.rank += (int)cards[0].face;
 				return true;
 			}
 
@@ -400,21 +480,42 @@ namespace CardGame {
 		private bool onePair() {
 			// case 5,5,x,y,z
 			if (cards[0].face == cards[1].face) {
+				for (int i = 0; i < 5; i++) {
+					this.rank += (int)((int)cards[i].face * Math.Pow(10, 4 - i));
+				}
 				return true;
 			}
 
 			// case x,4,4,y,z
 			if (cards[1].face == cards[2].face) {
+
+				this.rank += (int)((int)cards[1].face * Math.Pow(10, 4));
+				this.rank += (int)((int)cards[2].face * Math.Pow(10, 3));
+				this.rank += (int)((int)cards[0].face * Math.Pow(10, 2));
+				this.rank += (int)((int)cards[3].face * Math.Pow(10, 1));
+				this.rank += (int)((int)cards[4].face * Math.Pow(10, 0));
 				return true;
 			}
 
 			// case x,y,3,3,z
 			if (cards[2].face == cards[3].face) {
+
+				this.rank += (int)((int)cards[2].face * Math.Pow(10, 4));
+				this.rank += (int)((int)cards[3].face * Math.Pow(10, 3));
+				this.rank += (int)((int)cards[0].face * Math.Pow(10, 2));
+				this.rank += (int)((int)cards[1].face * Math.Pow(10, 1));
+				this.rank += (int)((int)cards[4].face * Math.Pow(10, 0));
 				return true;
 			}
 
 			// case x,y,z,2,2
 			if (cards[3].face == cards[4].face) {
+
+				this.rank += (int)((int)cards[3].face * Math.Pow(10, 4));
+				this.rank += (int)((int)cards[4].face * Math.Pow(10, 3));
+				this.rank += (int)((int)cards[0].face * Math.Pow(10, 2));
+				this.rank += (int)((int)cards[1].face * Math.Pow(10, 1));
+				this.rank += (int)((int)cards[2].face * Math.Pow(10, 0));
 				return true;
 			}
 
